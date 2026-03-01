@@ -32,8 +32,7 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ],
-      "versionName": "1.0"
+      ]
     },
     "extra": {
       "eas": {
