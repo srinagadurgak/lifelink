@@ -281,18 +281,8 @@ const PatientDashboard = ({ navigation }) => {
   };
 
   const handleEmergencyPress = () => {
-    Alert.alert(
-      t('patient.emergencyServices'),
-      t('patient.emergencyServicesConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: t('patient.callEmergency'), 
-          onPress: handleEmergencyCall,
-          style: 'destructive'
-        }
-      ]
-    );
+    // Immediately navigate to emergency call screen without confirmation
+    navigation.navigate('EmergencyCall');
   };
 
   useEffect(() => {
@@ -396,6 +386,7 @@ const PatientDashboard = ({ navigation }) => {
       {/* Main Content */}
       <ScrollView
         style={styles.content}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

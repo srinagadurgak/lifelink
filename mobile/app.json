@@ -2,7 +2,7 @@
   "expo": {
     "name": "LifeLink",
     "slug": "lifelink-app",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.lifelink.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "backgroundColor": "#1963eb",
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
@@ -32,7 +32,8 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "versionName": "1.0"
     },
     "extra": {
       "eas": {

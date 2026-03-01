@@ -123,10 +123,16 @@ export default function AuthScreen({ navigation }) {
         );
       }
 
-      // Role-based dashboard redirection
+      // For patients, navigate to emergency contacts setup
+      if (role === 'patient') {
+        navigation.replace('EmergencyContactsSetup', { userData: data.user });
+        return;
+      }
+
+      // Role-based dashboard redirection for non-patients
       const dashboardMap = {
-        patient: 'PatientDashboard',
         doctor: 'DoctorDashboard',
+        hospital: 'HospitalDashboard',
         superadmin: 'SuperAdminDashboard'
       };
 

@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema({
   // General fields
   medicalHistory: [String],
   allergies: [String],
+  emergencyContacts: [{
+    name: String,
+    phone: String,
+    relation: String
+  }],
   createdAt: { type: Date, default: Date.now }
 });
 
