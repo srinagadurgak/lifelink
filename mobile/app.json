@@ -7,6 +7,7 @@
     "userInterfaceStyle": "dark",
     "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "backgroundColor": "#1963eb",
       "resizeMode": "contain"
     },
@@ -21,7 +22,6 @@
     "android": {
       "package": "com.lifelink.app",
       "versionCode": 3,
-      "versionName": "1.0",
       "backgroundColor": "#1963eb",
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
