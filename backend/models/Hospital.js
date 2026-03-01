@@ -10,8 +10,8 @@ const hospitalSchema = new mongoose.Schema({
   beds: { type: Number, required: true },
   emergency: { type: Boolean, default: true },
   bloodBank: [{
-    type: String,
-    units: Number
+    type: { type: String },
+    units: { type: Number }
   }],
   facilities: [String],
   createdAt: { type: Date, default: Date.now }

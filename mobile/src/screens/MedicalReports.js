@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function MedicalReports({ navigation }) {
+  const { t } = useTranslation();
   const reports = [
     { id: 1, title: 'Full Blood Count', facility: 'City Lab Center', date: 'Oct 24, 2023', size: '2.4 MB', status: 'Normal', icon: 'water', color: '#ef4444' },
     { id: 2, title: 'Chest X-Ray PA View', facility: 'LifeLink General Hospital', date: 'Sep 12, 2023', size: '15.8 MB', status: 'Review Needed', icon: 'radiobox-marked', color: '#3b82f6' },
@@ -18,7 +20,7 @@ export default function MedicalReports({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Medical Reports</Text>
+        <Text style={styles.headerTitle}>{t('patient.medicalReports')}</Text>
         <TouchableOpacity 
           style={styles.notificationBtn}
           onPress={() => navigation.navigate('Notifications')}

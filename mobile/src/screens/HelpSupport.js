@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function HelpSupport({ navigation }) {
+  const { t } = useTranslation();
   const contactOptions = [
     { icon: 'phone', title: 'Call Us', subtitle: '+1 800 123 4567', action: 'tel:+18001234567' },
     { icon: 'email', title: 'Email Support', subtitle: 'support@lifelink.com', action: 'mailto:support@lifelink.com' },

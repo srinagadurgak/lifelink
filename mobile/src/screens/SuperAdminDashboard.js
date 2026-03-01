@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ const MOCK_HOSPITALS = [
 ];
 
 export default function SuperAdminDashboard({ navigation }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('admins');
   const [admins, setAdmins] = useState(MOCK_ADMINS);
   const [doctors, setDoctors] = useState(MOCK_DOCTORS);

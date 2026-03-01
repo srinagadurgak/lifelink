@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function DoctorPatients({ navigation }) {
+  const { t } = useTranslation();
   const patients = [
     { name: 'Sarah Jenkins', age: 45, condition: 'Post-Op Recovery', lastVisit: '2 days ago', status: 'stable' },
     { name: 'Michael Chen', age: 62, condition: 'Hypertension', lastVisit: '1 week ago', status: 'monitoring' },

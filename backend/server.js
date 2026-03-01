@@ -19,6 +19,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lifelink'
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/verification', require('./routes/verification'));
 app.use('/api/doctors', require('./routes/doctors'));
 app.use('/api/hospitals', require('./routes/hospitals'));
 app.use('/api/appointments', require('./routes/appointments'));
@@ -33,6 +34,8 @@ app.get('/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Server accessible at http://localhost:${PORT}`);
+  console.log(`✓ Server accessible at http://10.239.103.96:${PORT}`);
 });

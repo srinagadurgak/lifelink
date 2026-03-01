@@ -2,19 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }) {
-  const [progress] = useState(new Animated.Value(0));
-  const [loadingText, setLoadingText] = useState('Initializing AI Services...');
-  const [percentage, setPercentage] = useState(0);
+  const { t } = useTranslation();
+  const [progress] = useState(new Animated.Value(50));
+  const [loadingText, setLoadingText] = useState('Loading Medical Database...');
+  const [percentage, setPercentage] = useState(50);
 
   useEffect(() => {
-    // Animate progress bar
+    // Animate progress bar from 50% to 100%
     Animated.timing(progress, {
       toValue: 100,
-      duration: 3000,
+      duration: 1500,
       useNativeDriver: false,
     }).start();
 
@@ -30,9 +32,7 @@ export default function SplashScreen({ navigation }) {
         }
         
         // Update loading text based on progress
-        if (next < 30) {
-          setLoadingText('Initializing AI Services...');
-        } else if (next < 60) {
+        if (next < 70) {
           setLoadingText('Loading Medical Database...');
         } else if (next < 90) {
           setLoadingText('Securing Connection...');
@@ -48,8 +48,8 @@ export default function SplashScreen({ navigation }) {
   }, [navigation]);
 
   const progressWidth = progress.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
+    inputRange: [50, 100],
+    outputRange: ['50%', '100%'],
   });
 
   return (
@@ -70,7 +70,7 @@ export default function SplashScreen({ navigation }) {
             <View style={styles.loadingTextRow}>
               <View style={styles.loadingIconContainer}>
                 <Animated.View style={{ transform: [{ rotate: progress.interpolate({
-                  inputRange: [0, 100],
+                  inputRange: [50, 100],
                   outputRange: ['0deg', '360deg'],
                 }) }] }}>
                   <MaterialCommunityIcons name="sync" size={16} color="rgba(255,255,255,0.9)" />

@@ -25,6 +25,10 @@ import InventoryManagement from './src/screens/InventoryManagement';
 import EditProfile from './src/screens/EditProfile';
 import HelpSupport from './src/screens/HelpSupport';
 import About from './src/screens/About';
+import LanguageSettingsScreen from './src/screens/LanguageSettingsScreen';
+import TermsOfService from './src/screens/TermsOfService';
+import PrivacyPolicy from './src/screens/PrivacyPolicy';
+import DoctorVerificationScreen from './src/screens/DoctorVerificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -233,6 +237,38 @@ export default function App() {
           <Stack.Screen 
             name="About" 
             component={About}
+            options={{
+              ...screenOptions,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="LanguageSettings" 
+            component={LanguageSettingsScreen}
+            options={{
+              ...screenOptions,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="TermsOfService" 
+            component={TermsOfService}
+            options={{
+              ...screenOptions,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="PrivacyPolicy" 
+            component={PrivacyPolicy}
+            options={{
+              ...screenOptions,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen 
+            name="DoctorVerification" 
+            component={DoctorVerificationScreen}
             options={{
               ...screenOptions,
               animation: 'slide_from_right',

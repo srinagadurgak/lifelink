@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HistoryScreen({ navigation }) {
+  const { t } = useTranslation();
   const appointments = [
     { id: 1, doctor: 'Dr. Sarah James', specialty: 'Cardiologist', date: 'Oct 15, 2024', time: '10:30 AM', status: 'Completed' },
     { id: 2, doctor: 'Dr. Michael Chen', specialty: 'Dermatologist', date: 'Sep 28, 2024', time: '02:15 PM', status: 'Completed' },

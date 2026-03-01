@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function FleetManagement({ navigation }) {
+  const { t } = useTranslation();
   const vehicles = [
     { id: 'AMB-001', plate: 'NY-4522', status: 'active', driver: 'John Smith', location: 'Downtown' },
     { id: 'AMB-002', plate: 'NY-7834', status: 'maintenance', driver: 'Sarah Lee', location: 'Workshop' },

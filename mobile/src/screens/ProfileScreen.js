@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { getUserData, getUserRole, getRoleInfo, getDashboardForRole, clearUserData } from '../utils/userStorage';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTranslation } from '../hooks/useTranslation';
@@ -13,10 +14,23 @@ export default function ProfileScreen({ navigation }) {
   const fadeAnim = useState(new Animated.Value(0))[0];
   const scaleAnim = useState(new Animated.Value(0.9))[0];
   
-  // Get user data
-  const userData = getUserData();
-  const userRole = getUserRole();
-  const roleInfo = getRoleInfo(userRole);
+  // State for user data
+  const [userData, setUserData] = useState(getUserData());
+  const [userRole, setUserRole] = useState(getUserRole());
+  const [roleInfo, setRoleInfo] = useState(getRoleInfo(getUserRole()));
+
+  // Reload user data when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const freshUserData = getUserData();
+      const freshUserRole = getUserRole();
+      const freshRoleInfo = getRoleInfo(freshUserRole);
+      
+      setUserData(freshUserData);
+      setUserRole(freshUserRole);
+      setRoleInfo(freshRoleInfo);
+    }, [])
+  );
 
   useEffect(() => {
     Animated.parallel([

@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HospitalDashboard({ navigation }) {
+  const { t } = useTranslation();
   const bloodTypes = [
     { type: 'O+', units: 24, status: 'normal' },
     { type: 'A-', units: 3, status: 'critical' },

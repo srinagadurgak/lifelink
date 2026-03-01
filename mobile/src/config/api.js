@@ -37,4 +37,5 @@ export const API_ENDPOINTS = {
   HEALTH: `${API_BASE_URL}/health`,
 };
 
+export const API_URL = API_BASE_URL;
 export default API_BASE_URL;

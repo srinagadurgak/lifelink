@@ -21,11 +21,50 @@ const seedData = async () => {
     await Medicine.deleteMany({});
     await Ambulance.deleteMany({});
 
-    // Create sample users
+    // Create sample users with specified credentials
     const users = await User.create([
-      { email: 'patient@test.com', name: 'John Doe', role: 'patient', bloodType: 'O+', age: 28 },
-      { email: 'doctor@test.com', name: 'Dr. Sarah James', role: 'doctor' },
-      { email: 'hospital@test.com', name: 'City Hospital Admin', role: 'hospital' }
+      { 
+        email: 'patient@life.app', 
+        password: 'password123',
+        name: 'Sagar', 
+        role: 'patient', 
+        bloodType: 'O+', 
+        age: 28,
+        phone: '+1234567890',
+        isVerified: true,
+        verificationStatus: 'verified'
+      },
+      { 
+        email: 'doctor@life.app', 
+        password: 'password123',
+        name: 'Dr. Bendapparao', 
+        role: 'doctor',
+        phone: '+1234567891',
+        qualification: 'MBBS, MD',
+        nmcCode: 'NMC12345',
+        stateMedicalCouncil: 'Andhra Pradesh Medical Council',
+        isVerified: true,
+        verificationStatus: 'verified',
+        verifiedAt: new Date()
+      },
+      { 
+        email: 'hospital@life.app', 
+        password: 'password123',
+        name: 'Bhimavaram Hospitals', 
+        role: 'hospital',
+        phone: '+1234567892',
+        isVerified: true,
+        verificationStatus: 'verified'
+      },
+      { 
+        email: 'superadmin@life.app', 
+        password: 'password123',
+        name: 'Team X', 
+        role: 'superadmin',
+        phone: '+1234567893',
+        isVerified: true,
+        verificationStatus: 'verified'
+      }
     ]);
 
     // Create sample doctors

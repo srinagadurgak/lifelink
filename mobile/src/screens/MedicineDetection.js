@@ -5,10 +5,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { API_ENDPOINTS } from '../config/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function MedicineDetection({ navigation }) {
+  const { t } = useTranslation();
   const [isScanning, setIsScanning] = useState(false);
   const [detectionResult, setDetectionResult] = useState(null);
   const [patientAge, setPatientAge] = useState('28');

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function DoctorSchedule({ navigation }) {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(26);
 
   const dates = [24, 25, 26, 27, 28];

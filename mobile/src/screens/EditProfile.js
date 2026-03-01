@@ -1,19 +1,104 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/api';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function EditProfile({ navigation }) {
-  const [name, setName] = useState('Alex Johnson');
-  const [email, setEmail] = useState('alex.johnson@email.com');
-  const [phone, setPhone] = useState('+1 234 567 8900');
-  const [bloodType, setBloodType] = useState('O+');
-  const [address, setAddress] = useState('123 Main Street, New York');
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [bloodType, setBloodType] = useState('');
+  const [age, setAge] = useState('');
+  const [address, setAddress] = useState('');
 
-  const handleSave = () => {
-    Alert.alert('Success', 'Profile updated successfully!');
-    navigation.goBack();
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserId(user._id);
+        setName(user.name || '');
+        setEmail(user.email || '');
+        setPhone(user.phone || '');
+        setBloodType(user.bloodType || '');
+        setAge(user.age ? user.age.toString() : '');
+        setAddress(user.address || '');
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      Alert.alert('Error', 'Failed to load user data');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    if (!name || !email) {
+      Alert.alert('Error', 'Name and email are required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const updateData = {
+        name,
+        email,
+        phone,
+        bloodType,
+        age: age ? parseInt(age) : undefined,
+        address
+      };
+
+      const response = await fetch(`${API_URL}/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+
+      // Update local storage
+      await AsyncStorage.setItem('user', JSON.stringify(data));
+
+      Alert.alert('Success', 'Profile updated successfully!');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1963eb" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -96,6 +181,21 @@ export default function EditProfile({ navigation }) {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.label}>Age</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="calendar-outline" size={20} color="#94a3b8" />
+              <TextInput
+                style={styles.input}
+                value={age}
+                onChangeText={setAge}
+                placeholder="Enter your age"
+                placeholderTextColor="#64748b"
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Address</Text>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons name="map-marker-outline" size={20} color="#94a3b8" />
@@ -111,8 +211,16 @@ export default function EditProfile({ navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Save Changes</Text>
+        <TouchableOpacity 
+          style={[styles.saveBtn, saving && styles.saveBtnDisabled]} 
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveBtnText}>Save Changes</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -222,9 +330,22 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
   saveBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#94a3b8',
   },
 });

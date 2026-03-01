@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function InventoryManagement({ navigation }) {
+  const { t } = useTranslation();
   const bloodInventory = [
     { type: 'O+', units: 24, expiring: 2, status: 'normal' },
     { type: 'A+', units: 18, expiring: 0, status: 'normal' },

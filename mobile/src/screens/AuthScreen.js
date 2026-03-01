@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { setUserRole, setUserData, getDashboardForRole } from '../utils/userStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -10,21 +11,139 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function AuthScreen({ navigation }) {
   const { t } = useTranslation();
-  const [selectedRole, setSelectedRole] = useState('patient');
+  const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('patient');
+  // Doctor-specific fields
+  const [qualification, setQualification] = useState('');
+  const [nmcCode, setNmcCode] = useState('');
+  const [stateMedicalCouncil, setStateMedicalCouncil] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleContinue = () => {
-    // Save user data
-    setUserRole(selectedRole);
-    setUserData({
-      email: email,
-      name: email.split('@')[0], // Simple name extraction
-    });
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Email and password are required');
+      return;
+    }
 
-    // Navigate to appropriate dashboard
-    const dashboard = getDashboardForRole(selectedRole);
-    navigation.replace(dashboard);
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+
+      // Role-based dashboard redirection
+      const dashboardMap = {
+        patient: 'PatientDashboard',
+        doctor: 'DoctorDashboard',
+        hospital: 'HospitalDashboard',
+        superadmin: 'SuperAdminDashboard'
+      };
+
+      const dashboardScreen = dashboardMap[data.user.role] || 'PatientDashboard';
+      
+      navigation.replace(dashboardScreen);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!email || !password || !name) {
+      Alert.alert('Error', 'Name, email and password are required');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    if (role === 'doctor') {
+      if (!qualification || !nmcCode || !stateMedicalCouncil) {
+        Alert.alert('Error', 'All doctor fields are required: Qualification, NMC Code, and State Medical Council');
+        return;
+      }
+    }
+
+    setLoading(true);
+    try {
+      const requestBody = { email, password, name, role };
+      
+      if (role === 'doctor') {
+        requestBody.qualification = qualification;
+        requestBody.nmcCode = nmcCode;
+        requestBody.stateMedicalCouncil = stateMedicalCouncil;
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Signup failed');
+      }
+
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+
+      // Show verification message for doctors
+      if (role === 'doctor') {
+        Alert.alert(
+          'Registration Successful',
+          'Your account has been created. Your NMC credentials are pending verification. You will be notified once verified.',
+          [{ text: 'OK' }]
+        );
+      }
+
+      // Role-based dashboard redirection
+      const dashboardMap = {
+        patient: 'PatientDashboard',
+        doctor: 'DoctorDashboard',
+        superadmin: 'SuperAdminDashboard'
+      };
+
+      const dashboardScreen = dashboardMap[data.user.role] || 'PatientDashboard';
+      
+      navigation.replace(dashboardScreen);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const quickLogin = (userEmail, userPassword) => {
+    setEmail(userEmail);
+    setPassword(userPassword);
+    setIsSignup(false);
   };
 
   return (
@@ -43,108 +162,255 @@ export default function AuthScreen({ navigation }) {
       </View>
 
       <View style={styles.hero}>
-        <Text style={styles.title}>Join LifeLink</Text>
-        <Text style={styles.subtitle}>Empowering emergency healthcare with AI</Text>
-      </View>
-
-      <View style={styles.roleSection}>
-        <Text style={styles.sectionLabel}>CHOOSE YOUR ROLE</Text>
-        <View style={styles.roleGrid}>
-          <TouchableOpacity 
-            style={[styles.roleCard, selectedRole === 'patient' && styles.roleCardActive]}
-            onPress={() => setSelectedRole('patient')}
-          >
-            <View style={[styles.roleIcon, selectedRole === 'patient' && styles.roleIconActive]}>
-              <MaterialCommunityIcons name="account" size={24} color={selectedRole === 'patient' ? '#1963eb' : '#94a3b8'} />
-            </View>
-            <Text style={styles.roleText}>Patient</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.roleCard}
-            onPress={() => setSelectedRole('doctor')}
-          >
-            <View style={styles.roleIcon}>
-              <MaterialCommunityIcons name="doctor" size={24} color="#94a3b8" />
-            </View>
-            <Text style={[styles.roleText, { opacity: 0.6 }]}>Doctor</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.roleCard}
-            onPress={() => setSelectedRole('hospital')}
-          >
-            <View style={styles.roleIcon}>
-              <MaterialCommunityIcons name="hospital-building" size={24} color="#94a3b8" />
-            </View>
-            <Text style={[styles.roleText, { opacity: 0.6 }]}>Hospital</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.title}>{isSignup ? t('auth.signup') : t('auth.login')}</Text>
+        <Text style={styles.subtitle}>{isSignup ? t('auth.dontHaveAccount') : t('dashboard.welcome')}</Text>
       </View>
 
       <View style={styles.formSection}>
+        {isSignup && (
+          <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t('auth.selectRole')}</Text>
+              <View style={styles.roleGrid}>
+                <TouchableOpacity 
+                  style={[styles.roleCard, role === 'patient' && styles.roleCardActive]}
+                  onPress={() => setRole('patient')}
+                  disabled={loading}
+                >
+                  <MaterialCommunityIcons name="account" size={20} color={role === 'patient' ? '#1963eb' : '#94a3b8'} />
+                  <Text style={[styles.roleText, role === 'patient' && styles.roleTextActive]}>{t('auth.patient')}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.roleCard, role === 'doctor' && styles.roleCardActive]}
+                  onPress={() => setRole('doctor')}
+                  disabled={loading}
+                >
+                  <MaterialCommunityIcons name="doctor" size={20} color={role === 'doctor' ? '#10b981' : '#94a3b8'} />
+                  <Text style={[styles.roleText, role === 'doctor' && styles.roleTextActive]}>{t('auth.doctor')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>{t('auth.name')}</Text>
+              <View style={styles.inputContainer}>
+                <MaterialCommunityIcons name="account-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('auth.name')}
+                  placeholderTextColor="#94a3b8"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  editable={!loading}
+                />
+              </View>
+            </View>
+
+            {role === 'doctor' && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Qualification</Text>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="school-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g., MBBS, MD, MS"
+                      placeholderTextColor="#94a3b8"
+                      value={qualification}
+                      onChangeText={setQualification}
+                      autoCapitalize="characters"
+                      editable={!loading}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>NMC Registration Number</Text>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="card-account-details-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your NMC registration number"
+                      placeholderTextColor="#94a3b8"
+                      value={nmcCode}
+                      onChangeText={setNmcCode}
+                      autoCapitalize="characters"
+                      editable={!loading}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>State Medical Council</Text>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="map-marker-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g., Maharashtra Medical Council"
+                      placeholderTextColor="#94a3b8"
+                      value={stateMedicalCouncil}
+                      onChangeText={setStateMedicalCouncil}
+                      editable={!loading}
+                    />
+                  </View>
+                </View>
+              </>
+            )}
+          </>
+        )}
+
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Email Address</Text>
+          <Text style={styles.inputLabel}>{t('auth.email')}</Text>
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="name@example.com"
+              placeholder={t('auth.email')}
               placeholderTextColor="#94a3b8"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>One-Time Password (OTP)</Text>
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                style={styles.otpInput}
-                maxLength={1}
-                keyboardType="number-pad"
-                value={digit}
-                onChangeText={(text) => {
-                  const newOtp = [...otp];
-                  newOtp[index] = text;
-                  setOtp(newOtp);
-                }}
+          <Text style={styles.inputLabel}>{t('auth.password')}</Text>
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="lock-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder={t('auth.password')}
+              placeholderTextColor="#94a3b8"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <MaterialCommunityIcons 
+                name={showPassword ? "eye-off" : "eye"} 
+                size={20} 
+                color="#94a3b8" 
               />
-            ))}
-          </View>
-          <View style={styles.otpFooter}>
-            <Text style={styles.otpFooterText}>Didn't receive code?</Text>
-            <TouchableOpacity>
-              <Text style={styles.resendText}>Resend (45s)</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continue to Dashboard</Text>
+        {isSignup && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>{t('auth.confirmPassword')}</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="lock-check-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder={t('auth.confirmPassword')}
+                placeholderTextColor="#94a3b8"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                editable={!loading}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <MaterialCommunityIcons 
+                  name={showConfirmPassword ? "eye-off" : "eye"} 
+                  size={20} 
+                  color="#94a3b8" 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={isSignup ? handleSignup : handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>{isSignup ? t('auth.signup') : t('auth.login')}</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.superAdminBtn} 
-          onPress={() => {
-            setUserRole('superadmin');
-            setUserData({ email: 'admin@lifelink.com', name: 'Super Admin' });
-            navigation.replace('SuperAdminDashboard');
-          }}
+          style={styles.switchModeBtn}
+          onPress={() => setIsSignup(!isSignup)}
+          disabled={loading}
         >
-          <MaterialCommunityIcons name="shield-crown" size={20} color="#fbbf24" />
-          <Text style={styles.superAdminBtnText}>Super Admin Access</Text>
+          <Text style={styles.switchModeText}>
+            {isSignup ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}
+            {' '}
+            <Text style={styles.switchModeLink}>{isSignup ? t('auth.login') : t('auth.signup')}</Text>
+          </Text>
         </TouchableOpacity>
+
+        {!isSignup && (
+          <View style={styles.quickLoginSection}>
+            <Text style={styles.quickLoginTitle}>Quick Login (Demo)</Text>
+            <View style={styles.quickLoginGrid}>
+              <TouchableOpacity 
+                style={styles.quickLoginBtn}
+                onPress={() => quickLogin('patient@life.app', 'password123')}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons name="account" size={18} color="#1963eb" />
+                <Text style={styles.quickLoginText}>{t('auth.patient')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickLoginBtn}
+                onPress={() => quickLogin('doctor@life.app', 'password123')}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons name="doctor" size={18} color="#10b981" />
+                <Text style={styles.quickLoginText}>{t('auth.doctor')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickLoginBtn}
+                onPress={() => quickLogin('hospital@life.app', 'password123')}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons name="hospital-building" size={18} color="#f59e0b" />
+                <Text style={styles.quickLoginText}>{t('auth.hospital')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.quickLoginBtn}
+                onPress={() => quickLogin('superadmin@life.app', 'password123')}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons name="shield-crown" size={18} color="#fbbf24" />
+                <Text style={styles.quickLoginText}>{t('auth.admin')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          By signing up, you agree to our{'\n'}
-          <Text style={styles.link}>Terms of Service</Text> and <Text style={styles.link}>Privacy Policy</Text>
+          By {isSignup ? 'signing up' : 'signing in'}, you agree to our{'\n'}
+          <Text 
+            style={styles.link}
+            onPress={() => navigation.navigate('TermsOfService')}
+          >
+            Terms of Service
+          </Text> and{' '}
+          <Text 
+            style={styles.link}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+          >
+            Privacy Policy
+          </Text>
         </Text>
       </View>
       </ScrollView>
@@ -201,47 +467,6 @@ const styles = StyleSheet.create({
   roleSection: {
     marginBottom: 24,
   },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1963eb',
-    letterSpacing: 1,
-    marginBottom: 16,
-  },
-  roleGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  roleCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  roleCardActive: {
-    borderColor: '#1963eb',
-    borderWidth: 2,
-  },
-  roleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(148,163,184,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  roleIconActive: {
-    backgroundColor: 'rgba(25,99,235,0.2)',
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
   formSection: {
     gap: 16,
   },
@@ -277,61 +502,116 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  otpInput: {
-    flex: 1,
-    height: 56,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  otpFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  otpFooterText: {
-    fontSize: 12,
-    color: '#94a3b8',
-  },
-  resendText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1963eb',
-  },
   button: {
     backgroundColor: '#1963eb',
     borderRadius: 12,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  superAdminBtn: {
+  quickLoginSection: {
+    marginTop: 24,
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  quickLoginTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  quickLoginGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickLoginBtn: {
+    flex: 1,
+    minWidth: '45%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(251,191,36,0.1)',
-    borderRadius: 12,
-    height: 48,
-    marginTop: 12,
-    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+    gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.3)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  superAdminBtnText: {
-    color: '#fbbf24',
+  quickLoginText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  switchModeBtn: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  switchModeText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    color: '#94a3b8',
+  },
+  switchModeLink: {
+    color: '#1963eb',
+    fontWeight: '600',
+  },
+  roleGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  roleCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  roleCardActive: {
+    borderColor: '#1963eb',
+    borderWidth: 2,
+    backgroundColor: 'rgba(25,99,235,0.1)',
+  },
+  roleText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+  roleTextActive: {
+    color: '#1963eb',
+  },
+  verificationNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: 'rgba(251,191,36,0.1)',
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#fbbf24',
+  },
+  verificationNoteText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#fbbf24',
+    lineHeight: 18,
   },
   footer: {
     marginTop: 32,
