@@ -1,13 +1,14 @@
 // API Configuration
-// Update this with your computer's IP address when testing on physical device
+// Backend deployed on Render: https://lifelink-klk2.onrender.com
 
-// For Android Emulator: use 10.0.2.2
-// For iOS Simulator: use localhost
-// For Physical Device: use your computer's IP address (e.g., 192.168.1.100)
+// Production API (Render)
+const PRODUCTION_API_URL = 'https://lifelink-klk2.onrender.com';
 
-const API_BASE_URL = __DEV__ 
-  ? 'http://10.239.103.96:3000'  // Your computer's IP address
-  : 'https://your-production-api.com';
+// Local Development API (for testing with Expo Go)
+const DEVELOPMENT_API_URL = 'http://10.239.103.96:3000';
+
+// Use production URL for APK builds, development URL for Expo Go
+const API_BASE_URL = PRODUCTION_API_URL;
 
 export const API_ENDPOINTS = {
   // Auth
@@ -39,3 +40,7 @@ export const API_ENDPOINTS = {
 
 export const API_URL = API_BASE_URL;
 export default API_BASE_URL;
+
+// Note: To switch between development and production:
+// - For APK builds: Use PRODUCTION_API_URL (current setting)
+// - For local testing: Change API_BASE_URL to DEVELOPMENT_API_URL

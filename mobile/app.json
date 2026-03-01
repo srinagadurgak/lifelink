@@ -2,12 +2,11 @@
   "expo": {
     "name": "LifeLink",
     "slug": "lifelink-app",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
       "backgroundColor": "#1963eb",
       "resizeMode": "contain"
     },
@@ -16,12 +15,15 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.lifelink.app"
+      "bundleIdentifier": "com.lifelink.app",
+      "icon": "./assets/icon.png"
     },
     "android": {
       "package": "com.lifelink.app",
-      "versionCode": 1,
+      "versionCode": 3,
+      "versionName": "1.0",
       "backgroundColor": "#1963eb",
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1963eb"
@@ -42,6 +44,9 @@
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
